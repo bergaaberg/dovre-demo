@@ -1,0 +1,26 @@
+{
+  "name": "dovre-demo",
+  "private": true,
+  "type": "module",
+  "description": "The public Dovre demo (demo.dovre.dev): made-up data and packs on core's createDemoWorker.",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test 'test/*.test.ts' 'packs/*/test/*.test.ts'",
+    "check": "pnpm typecheck && pnpm test",
+    "dev": "wrangler dev --local --port 8798",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "dovre": "link:../dovre",
+    "dovre-packs": "link:../dovre-packs",
+    "hono": "4.13.13"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.152.0"
+  }
+}
