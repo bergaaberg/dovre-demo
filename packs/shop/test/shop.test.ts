@@ -156,8 +156,8 @@ test("demo: Northwind Shop support actions answer 403 read-only page on POST", a
     }));
     assert.equal(res.status, 403, `${actionPath} should answer 403`);
     const text = await res.text();
-    assert.match(text, /This demo is read-only/);
-    assert.match(text, /The demo shows made-up data/);
+    assert.match(text, /Read-only demo/);
+    assert.match(text, /a demo over made-up data/);
     assert.match(text, /href="https:\/\/dovre\.dev\/"/);
   }
 });
