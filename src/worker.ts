@@ -5,6 +5,7 @@
  */
 import { createDemoWorker } from "dovre/demo/worker.ts";
 import type { Pack } from "dovre/packs/types.ts";
+import { createAvatarPack } from "dovre-packs/packs/avatar/index.ts";
 import { northwindShopPack } from "../packs/shop/index.ts";
 import { snapshot } from "./fixtures.ts";
 import { answerLinear, demoLinearPack } from "./linear.ts";
@@ -14,7 +15,8 @@ export function demoWorker(o: { linear?: ReturnType<typeof demoLinearPack>; pack
   const linear = o.linear ?? demoLinearPack();
   return createDemoWorker({
     fixtures: { snapshot },
-    packs: [northwindShopPack(), linear, ...(o.packs ?? [])],
+    // The avatar (dovre-packs, for fun): Today's header and Bino's button.
+    packs: [northwindShopPack(), linear, createAvatarPack(), ...(o.packs ?? [])],
     // Made up: the Linear pack needs a key to run, and its fetch never leaves the Worker.
     settings: { LINEAR_API_KEY: "lin_demo_not_a_key" },
     answers: [{ match: /\blinear\b/, answer: () => answerLinear(linear.kept()) }],
