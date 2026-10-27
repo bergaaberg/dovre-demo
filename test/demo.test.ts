@@ -13,7 +13,7 @@ const text = async (path: string, w = demo) => {
 };
 
 test("every page draws, says it's a demo, isn't indexed, and every link stays in the demo or goes to dovre.dev", async () => {
-  const pages = ["/", "/prs", "/deploys", "/agents", "/packs", "/settings", "/stats", "/todo", "/bino", "/avatar", "/shop", "/shop/tickets/t-101", "/linear", "/elsewhere/linear.app/northwind/issue/NW-142"];
+  const pages = ["/", "/prs", "/deploys", "/agents", "/packs", "/settings", "/stats", "/todo", "/bino", "/shop", "/shop/tickets/t-101", "/linear", "/elsewhere/linear.app/northwind/issue/NW-142"];
   for (const path of pages) {
     const res = await demo.fetch(at(path));
     assert.equal(res.status, 200, path);
@@ -87,13 +87,9 @@ test("the made-up data has no markup; hostile Linear data (tests only) stays ine
   assert.ok(!said.includes("<script>alert(1)") && !said.includes("<img src=x"), "Bino's answer");
 });
 
-test("the avatar (dovre-packs): in Today's header and on Bino's button, its script beside the core's; saving a look stops at the read-only page", async () => {
+test("the avatar (dovre-packs) is off: not in Today's header or on Bino's button, still listed on the Packs page", async () => {
   const today = await text("/");
-  assert.match(today, /class="av-hero/);
-  assert.match(today, /id="bdock-btn"[^>]*>[^]*?data-av="dock"/);
-  const js = today.match(/<script type="module" src="(\/assets\/packs\.[0-9a-z]+\.js)">/)?.[1];
-  assert.ok(js, "the packs' script is linked");
-  assert.match(await text(js), /\/\/ avatar\n\{/);
-  const res = await demo.fetch(at("/avatar", { method: "POST", body: new URLSearchParams({ creature: "troll" }), headers: { "content-type": "application/x-www-form-urlencoded", origin: "https://demo.dovre.dev" } }));
-  assert.equal(res.status, 403);
+  assert.doesNotMatch(today, /class="av-hero/);
+  assert.doesNotMatch(today, /data-av="dock"/);
+  assert.match(await text("/packs"), /[Aa]vatar/);
 });

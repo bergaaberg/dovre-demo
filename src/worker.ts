@@ -15,9 +15,10 @@ export function demoWorker(o: { linear?: ReturnType<typeof demoLinearPack>; pack
   const linear = o.linear ?? demoLinearPack();
   return createDemoWorker({
     fixtures: { snapshot },
-    // The avatar (dovre-packs, for fun): Today's header and Bino's button.
+    // The avatar (dovre-packs, for fun) is loaded but off, as for a new tenant: the Packs page lists it.
     packs: [northwindShopPack(), linear, createAvatarPack(), ...(o.packs ?? [])],
     // Made up: the Linear pack needs a key to run, and its fetch never leaves the Worker.
+    layout: { tabs: ["/prs", "/agents", "/deploys"], packsOff: ["avatar"] },
     settings: { LINEAR_API_KEY: "lin_demo_not_a_key" },
     answers: [{ match: /\blinear\b/, answer: () => answerLinear(linear.kept()) }],
   });
