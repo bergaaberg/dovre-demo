@@ -12,5 +12,7 @@
   // custom domain or not.
   "routes": [{ "pattern": "demo.dovre.dev", "custom_domain": true }, { "pattern": "demo.dovre.dev/*", "zone_name": "dovre.dev" }],
   "observability": { "enabled": true },
+  // Anonymous counts of demo opens, pages and Bino questions, kept by dovre-control (workers/control/visits.ts).
+  "services": [{ "binding": "VISITS", "service": "dovre-control", "entrypoint": "Visits" }],
   "assets": { "directory": "node_modules/dovre/assets", "binding": "ASSETS", "run_worker_first": true }
 }
