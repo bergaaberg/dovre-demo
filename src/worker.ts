@@ -24,4 +24,48 @@ export function demoWorker(o: { linear?: ReturnType<typeof demoLinearPack>; pack
   });
 }
 
-export default demoWorker();
+type Hit = { event: string; key?: string };
+type Bindings = { ASSETS?: { fetch(req: Request): Promise<Response> }; VISITS?: { note(hits: Hit[]): Promise<number> } };
+
+const SITE = new Set(["dovre.dev", "www.dovre.dev"]);
+const SAY = /^\/bino\/(?:new|c\/[0-9a-f-]{36}\/say)$/i;
+const SEGMENT = /^[a-z0-9][a-z0-9-]{0,31}$/;
+
+/**
+ * What a request to the demo counts for the operator (dovre-control's visits.ts): a question to
+ * Bino, a page a browser opened, and where a visit came from (dovre.dev or elsewhere). Only page
+ * loads a browser navigated to count (Sec-Fetch-Mode), so most crawlers and the page's own
+ * requests don't. Nothing about the visitor is sent, only the event and its key.
+ */
+export function demoHits(request: Request): Hit[] {
+  const url = new URL(request.url);
+  if (request.method === "POST") return SAY.test(url.pathname) ? [{ event: "demo-bino" }] : [];
+  if (request.method !== "GET" || request.headers.get("sec-fetch-mode") !== "navigate" || request.headers.get("sec-fetch-dest") !== "document") return [];
+  const seg = url.pathname.split("/").filter(Boolean)[0] ?? "today";
+  const hits: Hit[] = SEGMENT.test(seg) ? [{ event: "demo-page", key: seg }] : [];
+  let from = "";
+  try {
+    from = new URL(request.headers.get("referer") ?? "").hostname;
+  } catch {}
+  if (from !== url.hostname) hits.push({ event: "demo-open", key: SITE.has(from) ? "site" : "other" });
+  return hits;
+}
+
+/**
+ * The demo, counting its use on control's `Visits` entrypoint (the VISITS service binding) beside
+ * it. Core's demo itself still gets no binding but its assets.
+ */
+export function countedDemo(demo = demoWorker()) {
+  return {
+    async fetch(request: Request, env: Bindings = {}, ctx?: { waitUntil(p: Promise<unknown>): void }): Promise<Response> {
+      const hits = env.VISITS ? demoHits(request) : [];
+      if (hits.length) {
+        const noted = env.VISITS!.note(hits).catch((e) => console.error(`visits: ${(e as Error)?.message ?? e}`));
+        ctx?.waitUntil(noted);
+      }
+      return demo.fetch(request, { ASSETS: env.ASSETS });
+    },
+  };
+}
+
+export default countedDemo();

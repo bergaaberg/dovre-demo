@@ -1,7 +1,7 @@
 /** demo.dovre.dev: its pages, its packs on made-up data, and nothing that leaves the demo. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import demo, { demoWorker } from "../src/worker.ts";
+import demo, { countedDemo, demoHits, demoWorker } from "../src/worker.ts";
 import { demoLinearPack, linearFixtures } from "../src/linear.ts";
 
 const at = (path: string, init?: RequestInit) => new Request(`https://demo.dovre.dev${path}`, init);
@@ -92,4 +92,26 @@ test("the avatar (dovre-packs) is off: not in Today's header or on Bino's button
   assert.doesNotMatch(today, /class="av-hero/);
   assert.doesNotMatch(today, /data-av="dock"/);
   assert.match(await text("/packs"), /[Aa]vatar/);
+});
+
+test("visits: browser page loads, opens from dovre.dev and Bino questions count; nothing about the visitor is sent", async () => {
+  const nav = (path: string, referer?: string) =>
+    at(path, { headers: { "sec-fetch-mode": "navigate", "sec-fetch-dest": "document", ...(referer ? { referer } : {}), "user-agent": "Mozilla/5.0", "cf-connecting-ip": "203.0.113.9" } });
+  assert.deepEqual(demoHits(nav("/", "https://dovre.dev/pricing/")), [{ event: "demo-page", key: "today" }, { event: "demo-open", key: "site" }]);
+  assert.deepEqual(demoHits(nav("/prs", "https://demo.dovre.dev/")), [{ event: "demo-page", key: "prs" }]);
+  assert.deepEqual(demoHits(nav("/agents/x")), [{ event: "demo-page", key: "agents" }, { event: "demo-open", key: "other" }]);
+  assert.deepEqual(demoHits(nav("/%3Cscript%3E", "https://demo.dovre.dev/")), []);
+  assert.deepEqual(demoHits(at("/prs")), [], "not a browser navigation: a crawler or the page's own fetch");
+  assert.deepEqual(demoHits(at("/bino/new", { method: "POST" })), [{ event: "demo-bino" }]);
+  assert.deepEqual(demoHits(at("/settings", { method: "POST" })), []);
+
+  const sent: unknown[] = [];
+  const waits: Promise<unknown>[] = [];
+  const res = await countedDemo().fetch(nav("/", "https://dovre.dev/"), { VISITS: { note: async (h) => (sent.push(h), 1) } }, { waitUntil: (p) => waits.push(p) });
+  await Promise.all(waits);
+  assert.equal(res.status, 200);
+  assert.deepEqual(sent, [[{ event: "demo-page", key: "today" }, { event: "demo-open", key: "site" }]]);
+  // Control being down never breaks a page.
+  const down = await countedDemo().fetch(nav("/prs"), { VISITS: { note: async () => Promise.reject(new Error("down")) } });
+  assert.equal(down.status, 200);
 });
