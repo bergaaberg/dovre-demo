@@ -22,7 +22,15 @@ type RawIssue = {
 
 const ago = (now: number, min: number) => new Date(now - min * 60_000).toISOString();
 
-const issue = (now: number, key: string, title: string, priority: number, state: [string, string], min: number, o: Partial<RawIssue> = {}): RawIssue => ({
+const issue = (
+  now: number,
+  key: string,
+  title: string,
+  priority: number,
+  state: [string, string],
+  min: number,
+  o: Partial<RawIssue> = {},
+): RawIssue => ({
   identifier: key,
   title,
   priority,
