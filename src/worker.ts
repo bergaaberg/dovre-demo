@@ -6,6 +6,7 @@
 import { createDemoWorker } from "dovre/demo/worker.ts";
 import type { Pack } from "dovre/packs/types.ts";
 import { createAvatarPack } from "dovre-packs/packs/avatar/index.ts";
+import { createMovementPack } from "dovre-packs/packs/movement/index.ts";
 import { northwindShopPack } from "../packs/shop/index.ts";
 import { snapshot } from "./fixtures.ts";
 import { answerLinear, demoLinearPack } from "./linear.ts";
@@ -16,7 +17,7 @@ export function demoWorker(o: { linear?: ReturnType<typeof demoLinearPack>; pack
   return createDemoWorker({
     fixtures: { snapshot },
     // The avatar (dovre-packs, for fun) is loaded but off, as for a new tenant: the Packs page lists it.
-    packs: [northwindShopPack(), linear, createAvatarPack(), ...(o.packs ?? [])],
+    packs: [northwindShopPack(), linear, createAvatarPack(), createMovementPack(), ...(o.packs ?? [])],
     // Made up: the Linear pack needs a key to run, and its fetch never leaves the Worker.
     layout: { tabs: ["/prs", "/agents", "/deploys"], packsOff: ["avatar"] },
     settings: { LINEAR_API_KEY: "lin_demo_not_a_key" },
