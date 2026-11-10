@@ -10,7 +10,6 @@
  * is made-up data (`data`), and a write changes only what this pack shows afterwards.
  */
 import type { Context } from "hono";
-import { logAction } from "dovre/actions/deploys.ts";
 import type { AppEnv } from "dovre/env.ts";
 import { type Pack, PACK_API, type PackContext, type PackNeed } from "dovre/packs/types.ts";
 import { html, PageHeader } from "dovre/ui/kit.ts";
@@ -43,12 +42,12 @@ export function northwindShopPack(o: { /** The shop's data (default: the demo's 
   /** One write: re-checks (`why` says why not), logs either way, then goes back. */
   async function write(c: Context<AppEnv>, ctx: PackContext, w: { kind: string; target: string; detail?: string; why: string | undefined; apply: () => void; back: string }) {
     if (w.why) {
-      await logAction(ctx.db, { kind: w.kind, target: w.target, ok: false, error: w.why });
+      await ctx.logged({ kind: w.kind, target: w.target, ok: false, error: w.why });
       const res = await ctx.page(c, { title: "Not done · Northwind Shop · Dovre", current: "/shop", body: html`${PageHeader({ title: "Not done", sub: w.why })}<p><a href="${w.back}">Back</a></p>` });
       return new Response(res.body, { status: 409, headers: res.headers });
     }
     w.apply();
-    await logAction(ctx.db, { kind: w.kind, target: w.target, detail: w.detail, ok: true });
+    await ctx.logged({ kind: w.kind, target: w.target, detail: w.detail, ok: true });
     ctx.publish(["shop"]);
     return c.redirect(w.back, 303);
   }
@@ -130,11 +129,11 @@ export function northwindShopPack(o: { /** The shop's data (default: the demo's 
           // Never the reply's text on the log: what was written stays with the ticket.
           const why = !t ? "No such ticket." : t.state === "resolved" ? "That ticket is resolved." : !(form.reply ?? "").trim() ? "Write a reply first." : undefined;
           if (why) {
-            await logAction(ctx.db, { kind: "shop.reply", target, ok: false, error: why });
+            await ctx.logged({ kind: "reply", target, ok: false, error: why });
             return { ok: false, error: why };
           }
           done.replied.add(t!.id);
-          await logAction(ctx.db, { kind: "shop.reply", target, ok: true });
+          await ctx.logged({ kind: "reply", target, ok: true });
           ctx.publish(["shop"]);
           return { ok: true, done: `Reply sent on ticket #${t!.id}`, href: `/shop/tickets/${t!.id}` };
         },
@@ -153,25 +152,25 @@ export function northwindShopPack(o: { /** The shop's data (default: the demo's 
       app.post("/shop/tickets/:id/resend-receipt", async (c) => {
         const t = ticketOf(c.req.param("id"));
         const why = !t ? "No such ticket." : t.order.state === "failed" ? `Order ${t.order.id} was never paid: there's no receipt to send.` : undefined;
-        return write(c, ctx, { kind: "shop.receipt", target: t ? `order ${t.order.id}` : "a ticket", why, apply: () => {}, back: t ? `/shop/tickets/${t.id}` : "/shop" });
+        return write(c, ctx, { kind: "receipt", target: t ? `order ${t.order.id}` : "a ticket", why, apply: () => {}, back: t ? `/shop/tickets/${t.id}` : "/shop" });
       });
 
       app.post("/shop/tickets/:id/refund", async (c) => {
         const t = ticketOf(c.req.param("id"));
         const why = !t ? "No such ticket." : t.order.state === "refunded" ? `Order ${t.order.id} is already refunded.` : t.order.state === "failed" ? `Order ${t.order.id} was never paid: there's nothing to refund.` : undefined;
-        return write(c, ctx, { kind: "shop.refund", target: t ? `order ${t.order.id}` : "a ticket", detail: t?.order.total, why, apply: () => done.refunded.add(t!.order.id), back: t ? `/shop/tickets/${t.id}` : "/shop" });
+        return write(c, ctx, { kind: "refund", target: t ? `order ${t.order.id}` : "a ticket", detail: t?.order.total, why, apply: () => done.refunded.add(t!.order.id), back: t ? `/shop/tickets/${t.id}` : "/shop" });
       });
 
       app.post("/shop/customers/:id/unlock", async (c) => {
         const cu = customerOf(c.req.param("id"));
         const why = !cu ? "No such customer." : cu.status !== "locked" ? `${cu.name}'s account isn't locked.` : undefined;
-        return write(c, ctx, { kind: "shop.unlock", target: cu ? `customer ${cu.id}` : "a customer", why, apply: () => done.unlocked.add(cu!.id), back: "/shop" });
+        return write(c, ctx, { kind: "unlock", target: cu ? `customer ${cu.id}` : "a customer", why, apply: () => done.unlocked.add(cu!.id), back: "/shop" });
       });
 
       app.post("/shop/customers/:id/extend-shipping", async (c) => {
         const cu = customerOf(c.req.param("id"));
         const why = !cu ? "No such customer." : done.extended.has(cu.id) ? `${cu.name}'s free shipping is already extended.` : undefined;
-        return write(c, ctx, { kind: "shop.shipping", target: cu ? `customer ${cu.id}` : "a customer", detail: "30 days", why, apply: () => done.extended.add(cu!.id), back: "/shop" });
+        return write(c, ctx, { kind: "shipping", target: cu ? `customer ${cu.id}` : "a customer", detail: "30 days", why, apply: () => done.extended.add(cu!.id), back: "/shop" });
       });
     },
   };
