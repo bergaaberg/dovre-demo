@@ -21,7 +21,8 @@ import {
   Stat,
   Stats,
 } from "dovre/ui/kit.ts";
-import { ageOf, type ShopData, type ShopTicket, summaryOf } from "./data.ts";
+import { ageOf, refundRate, type ShopData, type ShopTicket, summaryOf } from "./data.ts";
+import { percent } from "./format.ts";
 
 export function shopPage(data: ShopData): Html {
   const visibleTickets = data.tickets;
@@ -54,6 +55,10 @@ export function shopPage(data: ShopData): Html {
         value: count(data.stats.refundsWeek),
         delta: Delta({ value: data.stats.refundsWeekDelta, good: "down" }),
         tone: "ok",
+      }),
+      Stat({
+        label: "Refund rate",
+        value: percent(refundRate(data.stats)),
       }),
     ])}
 

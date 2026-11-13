@@ -59,6 +59,8 @@ export type ShopStats = {
   ordersTodayDelta: number;
   refundsWeek: number;
   refundsWeekDelta: number;
+  /** Orders placed this week, for the refund rate. */
+  ordersWeek: number;
   funnel: FunnelStep[];
   ordersByState: OrderStateCount[];
   revenueDays: string[];
@@ -280,6 +282,7 @@ export function demoShopData(now: number = Date.now()): ShopData {
     ordersTodayDelta: 28,
     refundsWeek: 7,
     refundsWeekDelta: -2,
+    ordersWeek: 2630,
     funnel: [
       { label: "Store visits", value: 24500, note: "100 %", color: "s1" },
       { label: "Accounts created", value: 4800, note: "19.6 %", color: "s1" },
@@ -318,3 +321,6 @@ export function summaryOf(data: ShopData): { waiting: ShopTicket[]; failed: Shop
 
 /** "2h 15m". */
 export const ageOf = (minutes: number) => (minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`);
+
+/** Share of this week's orders that were refunded, from 0 to 1. */
+export const refundRate = (stats: ShopStats) => (stats.ordersToday === 0 ? 0 : stats.refundsWeek / stats.ordersToday);

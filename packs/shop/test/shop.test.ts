@@ -162,3 +162,11 @@ test("demo: Northwind Shop support actions answer 403 read-only page on POST", a
   }
 });
 
+
+test("refund rate: this week's refunds over this week's orders", async () => {
+  const { demoShopData, refundRate } = await import("../data.ts");
+  const { percent } = await import("../format.ts");
+  const stats = demoShopData(0).stats;
+  assert.equal(percent(refundRate(stats)), "1.7 %");
+  assert.equal(percent(0), "0.0 %");
+});
