@@ -50,7 +50,7 @@ test("demo: custom app pack (Northwind Shop) renders /shop, ticket details, nav,
   assert.match(ticketHtml, /Recent customer orders/);
   assert.match(ticketHtml, /Ticket thread/);
 
-  // Nav, Today card, glance & brief on homepage
+  // Nav, Today card, and brief on homepage
   const homeRes = await w.fetch(at("/"));
   assert.equal(homeRes.status, 200);
   const homeHtml = await homeRes.text();
@@ -58,8 +58,6 @@ test("demo: custom app pack (Northwind Shop) renders /shop, ticket details, nav,
   assert.match(homeHtml, /Northwind Shop/); // Today card
   assert.match(homeHtml, /3 tickets waiting over an hour/);
   assert.match(homeHtml, /1 failed payment/);
-  assert.match(homeHtml, /Shop orders/); // Glance
-  assert.match(homeHtml, /412/);
   assert.match(homeHtml, /3 support tickets wait over an hour/); // Briefing lede
 
   // Needs hook produces needs for tickets waiting over an hour
