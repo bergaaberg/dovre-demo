@@ -15,6 +15,7 @@ import { answerLinear, demoLinearPack } from "./linear.ts";
 export function demoWorker(o: { linear?: ReturnType<typeof demoLinearPack>; packs?: Pack[] } = {}) {
   const linear = o.linear ?? demoLinearPack();
   return createDemoWorker({
+    compactToday: true,
     fixtures: { snapshot },
     // The avatar (dovre-packs, for fun) is loaded but off, as for a new tenant: the Packs page lists it.
     packs: [northwindShopPack(), linear, createAvatarPack(), createMovementPack(), ...(o.packs ?? [])],

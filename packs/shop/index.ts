@@ -76,14 +76,15 @@ export function northwindShopPack(o: { /** The shop's data (default: the demo's 
     glance: () => [{ label: "Shop orders", value: current().stats.ordersToday }],
     brief: () => {
       const { waiting, failed } = summaryOf(current());
-      const parts: Array<string | { text: string; href: string; tone: "warn" | "bad" }> = [];
-      if (waiting.length) parts.push({ text: `${plural(waiting.length, "support ticket waits", "support tickets wait")} over an hour`, href: "/shop#queue", tone: "warn" });
-      if (failed.length) {
-        if (parts.length) parts.push(", and ");
-        parts.push({ text: plural(failed.length, "failed payment", "failed payments"), href: `/shop/tickets/${failed[0]!.id}`, tone: "bad" });
-        parts.push(failed.length === 1 ? " needs attention." : " need attention.");
-      } else if (parts.length) parts.push(".");
-      return parts;
+      if (waiting.length) return [
+        { text: `${plural(waiting.length, "support ticket waits", "support tickets wait")} over an hour`, href: "/shop#queue", tone: "warn" },
+        ".",
+      ];
+      if (failed.length) return [
+        { text: plural(failed.length, "failed payment", "failed payments"), href: `/shop/tickets/${failed[0]!.id}`, tone: "bad" },
+        failed.length === 1 ? " needs attention." : " need attention.",
+      ];
+      return [];
     },
     bino: () => {
       const data = current();

@@ -27,11 +27,26 @@ test("every page draws, says it's a demo, isn't indexed, and every link stays in
   }
 });
 
-test("Linear: the real pack reads the made-up workspace: Today's card, glance and opening line, and its page", async () => {
+test("Today opens with deploys, agents, support and one mention of the failed build", async () => {
+  const today = await text("/");
+  const lead = today.match(/<p class="lede">(.*?)<\/p>/s)?.[1] ?? "";
+  assert.deepEqual([...lead.matchAll(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].map(([, href, label]) => [href, label]), [
+    ["/#ship", "One deploy"],
+    ["/#agents", "One agent"],
+    ["/shop#queue", "3 support tickets wait over an hour"],
+    ["/elsewhere/northwind/catalog/actions", "catalog feat/image-cache"],
+  ]);
+  assert.doesNotMatch(lead, /failed payment|urgent Linear issue|PR has a red build|reviews wait/);
+  const glance = today.match(/<dl class="glance"[^>]*>(.*?)<\/dl>/s)?.[1] ?? "";
+  assert.equal([...glance.matchAll(/<dt>/g)].length, 4);
+  assert.match(today, /1 failed payment/);
+  assert.match(today, /Cache product images at the edge/);
+});
+
+test("Linear: the real pack reads the made-up workspace for Today's card and its own page", async () => {
   const today = await text("/");
   assert.match(today, /Linear/);
   assert.match(today, /NW-142/, "the card lists my issues");
-  assert.match(today, /1 urgent Linear issue/, "the opening line");
   const page = await text("/linear");
   for (const key of ["NW-142", "NW-138", "NW-131", "NW-127", "NW-150", "NW-151"]) assert.match(page, new RegExp(key), key);
   assert.match(page, /href="\/elsewhere\/linear\.app\/northwind\/issue\/NW-142"/);
